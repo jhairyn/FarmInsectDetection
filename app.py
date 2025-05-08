@@ -21,12 +21,14 @@ with open(CLASS_NAMES_PATH, 'r') as f:
 def load_model():
     model = models.mobilenet_v2(pretrained=False)
     model.classifier[1] = torch.nn.Linear(model.last_channel, NUM_CLASSES)
-    model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
+    
+    # Load model weights with strict=False for flexibility
+    state_dict = torch.load(MODEL_PATH, map_location=DEVICE)
+    model.load_state_dict(state_dict, strict=False)
+
     model.to(DEVICE)
     model.eval()
     return model
-
-model = load_model()
 
 # --- IMAGE TRANSFORM ---
 transform = transforms.Compose([
