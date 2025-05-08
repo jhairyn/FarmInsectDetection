@@ -9,7 +9,7 @@ import json
 # --- SETTINGS ---
 MODEL_PATH = 'outputs/best_model.pth'
 CLASS_NAMES_PATH = 'outputs/class_names.json'
-NUM_CLASSES = 12  # Update this if needed
+NUM_CLASSES = 10  # Update this if needed
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # --- LOAD CLASS NAMES ---
