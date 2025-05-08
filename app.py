@@ -39,7 +39,7 @@ transform = transforms.Compose([
 ])
 
 # --- INFERENCE FUNCTION ---
-def predict(image):
+def predict(image, model):
     input_tensor = transform(image).unsqueeze(0).to(DEVICE)
     with torch.no_grad():
         output = model(input_tensor)
@@ -62,7 +62,8 @@ if uploaded_file is not None:
     st.image(image, caption="Uploaded Image", use_column_width=True)
 
     st.write("Predicting...")
-    predicted_class, confidence_score, top_preds = predict(image)
+    predicted_class, confidence_score, top_preds = predict(image, model)
+
 
     st.success(f"🎯 Predicted: {predicted_class} ({confidence_score:.2f}% confidence)")
 
