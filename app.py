@@ -8,27 +8,40 @@ import json
 
 # --- SETTINGS ---
 MODEL_PATH = 'outputs/best_model.pth'
-CLASS_NAMES_PATH = 'outputs/class_names.json'  # Saved during training
-NUM_CLASSES = 12  # Update if necessary
+CLASS_NAMES_PATH = 'outputs/class_names.json'
+NUM_CLASSES = 12  # Update this if needed
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # --- LOAD CLASS NAMES ---
+if not os.path.exists(CLASS_NAMES_PATH):
+    st.error(f"❌ Class names file not found at: {CLASS_NAMES_PATH}")
+    st.stop()
+
 with open(CLASS_NAMES_PATH, 'r') as f:
     class_names = json.load(f)
 
-# --- LOAD MODEL ---
+# --- CHECK MODEL FILE EXISTS ---
+if not os.path.exists(MODEL_PATH):
+    st.error(f"❌ Model file not found at: {MODEL_PATH}")
+    st.stop()
+
+# --- LOAD MODEL FUNCTION ---
 @st.cache_resource
 def load_model():
     model = models.mobilenet_v2(pretrained=False)
     model.classifier[1] = torch.nn.Linear(model.last_channel, NUM_CLASSES)
-    
-    # Load model weights with strict=False for flexibility
     state_dict = torch.load(MODEL_PATH, map_location=DEVICE)
-    model.load_state_dict(state_dict, strict=False)
-
+    model.load_state_dict(state_dict, strict=False)  # strict=False allows flexibility
     model.to(DEVICE)
     model.eval()
     return model
+
+# --- LOAD MODEL SAFELY ---
+try:
+    model = load_model()
+except Exception as e:
+    st.error(f"🚨 Failed to load model: {e}")
+    st.stop()
 
 # --- IMAGE TRANSFORM ---
 transform = transforms.Compose([
@@ -53,7 +66,7 @@ def predict(image, model):
 
 # --- STREAMLIT UI ---
 st.title("🔍 Farm Insect Detection")
-st.write("Upload an image to predict the insect.")
+st.write("Upload an image to predict the insect species.")
 
 uploaded_file = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png"])
 
@@ -64,9 +77,8 @@ if uploaded_file is not None:
     st.write("Predicting...")
     predicted_class, confidence_score, top_preds = predict(image, model)
 
+    st.success(f"🎯 Predicted: **{predicted_class}** ({confidence_score:.2f}% confidence)")
 
-    st.success(f"🎯 Predicted: {predicted_class} ({confidence_score:.2f}% confidence)")
-
-    st.write("Top 3 Predictions:")
+    st.write("📊 Top 3 Predictions:")
     for i, (label, score) in enumerate(top_preds, 1):
-        st.write(f"{i}. {label} - {score:.2f}%")
+        st.write(f"{i}. **{label}** — {score:.2f}%")
